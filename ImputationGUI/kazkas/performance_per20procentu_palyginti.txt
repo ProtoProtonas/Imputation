@@ -1,0 +1,20 @@
+ExtraTreesRegressor
+total: 25 / 399
+score: 6.3%
+
+BayesianRidge
+total: 18 / 399
+score: 4.5%
+
+KNeighborsRegressor
+total: 21 / 399
+score: 5.3%
+
+DecisionTreeRegressor
+total: 25 / 399
+score: 6.3%
+
+RandomForestRegressor
+total: 24 / 399
+score: 6.0%
+

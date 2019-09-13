@@ -1,0 +1,27 @@
+        # 16, 16, leaky_relu, leaky_relu, viso epochu 405 - 15.9%
+        # 16, 16, relu, relu, viso epochu 389 - 17.1%
+        
+        # 32, 32, leaky_relu, leaky_relu, viso epochu 754 - 19.3%
+        # 32, 32, relu, relu, viso epochu 667 - 17.7%
+
+        # 64, 64, leaky_relu, leaky_relu, viso epochu 498 - 17%
+        # 64, 64, relu, relu, viso epochu 463 - 19.9%
+
+        # 128, 128 leaky_relu, leaky_relu, viso epochu 276 - 16.5%
+        # 128, 128 relu, relu, viso epochu 295 - 19.2%
+
+        # 256, 256 leaky_relu, leaky_relu, viso epochu 171 - 18.2%
+        # 256, 256 relu, relu, viso epochu 148 - 14.5%
+        
+        # 512, 512 relu, relu, viso epochu 92 - 15.9%
+        # 512, 512 leaky_relu, leaky_relu, viso epochu 102 - 16.6%
+
+        # 1024, 1024 relu, relu, viso epochu 52 - 16.3%
+        # 1024, 1024 leaky_relu, leaky_relu, viso epochu 64  - 14.6%
+
+        # 2048, 2048, relu, relu, viso epochu 31 - 13.3%
+        # 2048, 2048, leaky_relu, leaky_relu, viso epochu 40 - 13.8%
+
+
+1. uzpildyti pagal rodiklius - tikslumas 100%
+2. naudoti algoritmus - interpoliacija, neuroniniai tinklai, iterative imputers
