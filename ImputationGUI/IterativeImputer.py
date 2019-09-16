@@ -95,7 +95,8 @@ def train_model_decision_trees_fill(filename):
 
     # ar reikia atmesti mažas reikšmes
     new_filename = filename
-    if True:
+    atmesti_mazas_reiksmes = True
+    if atmesti_mazas_reiksmes:
         df = atmesti_mazas_tui(df)
         new_filename = filename.split('.')
         new_filename = new_filename[0] + '_be_mazu_tui.' + new_filename[1]

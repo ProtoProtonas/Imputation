@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b25ecae1-ad7d-4ff4-8b2c-560f8c51e711</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>IterativeImputer.py</StartupFile>
+    <StartupFile>PridetiMetaduomenis.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -33,8 +33,14 @@
     <Compile Include="machine_learning.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="PridetiMetaduomenis.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RecurrentNN.py" />
     <Compile Include="SimpleNN.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="uzpildyti_pagal_rod_kod.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

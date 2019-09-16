@@ -674,17 +674,3 @@ def prideti_saliu_numerius(filename):
     df.to_csv(filename, encoding = 'utf-16', sep = '\t', index = False)
     return 0
 
-
-
-
-f = 'pngs/raw_main_updated_updated.csv'
-#uzpildyti_pagal_rodiklius(f)
-#add_metadata(f)
-tidy_up_file(f)
-
-#tidy_up_file('pngs/predict2_updated.csv')
-#train_model_linear_regression()
-
-#tidy_up_file('main_raw_updated.csv')
-
-
