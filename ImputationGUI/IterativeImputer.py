@@ -260,4 +260,4 @@ def train_model_decision_trees_test(filename):
     f.close()
     return 0
 
-train_model_decision_trees_test('pngs/predict2_updated.csv')
+train_model_decision_trees_test('csvs/predict2_updated.csv')

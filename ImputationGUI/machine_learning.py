@@ -199,7 +199,7 @@ def train_model_linear_regression():
     for label in labels:
         for rod_kod in rod_kods:
             #try:
-            maindf = pd.read_csv('pngs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
+            maindf = pd.read_csv('csvs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
             df = maindf.loc[maindf['ROD_KOD'] == rod_kod]
             X = shuffle(df)
             for name in ['COMPANY', 'VLST_KODAS2']:
@@ -290,12 +290,12 @@ def train_model_linear_regression():
                         s.index = pd.to_datetime(s.index)
                         ax2.plot(s)
 
-                #maindf.to_csv('pngs/predict2_updated.csv', sep = '\t', encoding = 'utf-16', index = False)
+                #maindf.to_csv('csvs/predict2_updated.csv', sep = '\t', encoding = 'utf-16', index = False)
 
                 if save_plots:
                     fig = plt.gcf()
                     fig.set_size_inches((15, 18), forward = False)
-                    plt.savefig('pngs/%s_%s.png' % (label, str(rod_kod)), dpi = 600, bbox_inches = 'tight')
+                    plt.savefig('csvs/%s_%s.png' % (label, str(rod_kod)), dpi = 600, bbox_inches = 'tight')
 
             #except Exception as e:
             #    print(e)
@@ -420,7 +420,7 @@ def train_model_decision_trees_test():
     for estimator in estimators:
         for rod_kod in rod_kods:
             try:
-                maindf = pd.read_csv('pngs/predict.csv', encoding = 'utf-16', sep = '\t')
+                maindf = pd.read_csv('csvs/predict.csv', encoding = 'utf-16', sep = '\t')
 
                 df = maindf.loc[maindf['ROD_KOD'] == rod_kod]
                 X = shuffle(df)
@@ -498,12 +498,12 @@ def train_model_decision_trees_test():
                             s.index = pd.to_datetime(s.index)
                             ax2.plot(s)
 
-                    #maindf.to_csv('pngs/predict.csv', sep = '\t', encoding = 'utf-16', index = False)
+                    #maindf.to_csv('csvs/predict.csv', sep = '\t', encoding = 'utf-16', index = False)
 
                     if save_plots:
                         fig = plt.gcf()
                         fig.set_size_inches((15, 18), forward = False)
-                        plt.savefig('pngs/%s_%s.png' % (random.randint(1, 200), str(rod_kod)), dpi = 600, bbox_inches = 'tight')
+                        plt.savefig('csvs/%s_%s.png' % (random.randint(1, 200), str(rod_kod)), dpi = 600, bbox_inches = 'tight')
 
             except Exception as e:
                 print(e)
@@ -536,7 +536,7 @@ def train_model_decision_trees():
     for estimator in estimators:
         for rod_kod in rod_kods:
             try:
-                maindf = pd.read_csv('pngs/predict_%s.csv' % str(estimator).split('(')[0], encoding = 'utf-16', sep = '\t')
+                maindf = pd.read_csv('csvs/predict_%s.csv' % str(estimator).split('(')[0], encoding = 'utf-16', sep = '\t')
 
                 df = maindf.loc[maindf['ROD_KOD'] == rod_kod]
                 X = shuffle(df)
@@ -560,7 +560,7 @@ def train_model_decision_trees():
                     X = pd.DataFrame(data = X, index = index, columns = columns)
                     maindf.update(X, errors = 'ignore')
 
-                    maindf.to_csv('pngs/predict_%s.csv' % str(estimator).split('(')[0], sep = '\t', encoding = 'utf-16', index = False)
+                    maindf.to_csv('csvs/predict_%s.csv' % str(estimator).split('(')[0], sep = '\t', encoding = 'utf-16', index = False)
 
             except Exception as e:
                 print(e)
@@ -627,7 +627,7 @@ def uzpildyti_pagal_rodiklius(filename):
 
 def add_metadata(filename):
     df = pd.read_csv(filename, encoding = 'utf-16', sep = '\t')
-    mdf = pd.read_csv('pngs/TUI_papildoma_info.csv', encoding = 'utf-16', sep = '\t')
+    mdf = pd.read_csv('csvs/TUI_papildoma_info.csv', encoding = 'utf-16', sep = '\t')
     comps = list(set(df['COMPANY']))
     comps.sort()#reverse = True)
     mdf_cols = list(mdf.columns.values)

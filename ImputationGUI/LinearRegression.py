@@ -45,7 +45,7 @@ def train_model_linear_regression():
     save_plots = True
     pd.options.mode.chained_assignment = None
 
-    df = pd.read_csv('pngs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
+    df = pd.read_csv('csvs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
     rod_kods = list(set(df['ROD_KOD'].astype(int)))
     labels = list(df.columns.values)
 
@@ -68,7 +68,7 @@ def train_model_linear_regression():
     for label in ['2017-07-01']:#labels:
         for rod_kod in rod_kods:
 
-            maindf = pd.read_csv('pngs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
+            maindf = pd.read_csv('csvs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
             df = maindf.loc[maindf['ROD_KOD'] == rod_kod]
             X = shuffle(df)
             for name in ['COMPANY', 'VLST_KODAS2']:
@@ -139,7 +139,7 @@ def train_model_linear_regression():
                 #    new_column = pd.DataFrame({label: [s[label]]}, index = [s.name])
                 #    maindf.update(new_column, errors = 'ignore')
 
-                #maindf.to_csv('pngs/predict2_updated.csv', sep = '\t', encoding = 'utf-16', index = False)
+                #maindf.to_csv('csvs/predict2_updated.csv', sep = '\t', encoding = 'utf-16', index = False)
 
 
     return 0

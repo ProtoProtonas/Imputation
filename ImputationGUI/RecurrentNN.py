@@ -56,7 +56,7 @@ def plot_history(history):
 
 def main_copy():
     label = '2017-07-01'
-    raw_df = pd.read_csv('pngs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
+    raw_df = pd.read_csv('csvs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
     df = raw_df.copy()
     df = df[np.isfinite(df[label])]
 
@@ -161,7 +161,7 @@ def main_copy():
     
 def main():
     label = '2017-07-01'
-    raw_df = pd.read_csv('pngs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
+    raw_df = pd.read_csv('csvs/predict2_updated.csv', encoding = 'utf-16', sep = '\t')
     df = raw_df.copy()
     df = df[np.isfinite(df[label])]
 

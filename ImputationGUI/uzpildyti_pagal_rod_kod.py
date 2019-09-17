@@ -89,4 +89,4 @@ def uzpildyti_pagal_rodiklius(filename):
 
     return 0
 
-uzpildyti_pagal_rodiklius('pngs/predict2.csv')
+uzpildyti_pagal_rodiklius('csvs/predict2.csv')

@@ -32,7 +32,7 @@ def tidy_up_file(filename, encoding = 'utf-16'):
 
 def add_metadata(filename):
     df = pd.read_csv(filename, encoding = 'utf-16', sep = '\t')
-    mdf = pd.read_csv('pngs/TUI_papildoma_info.csv', encoding = 'utf-16', sep = '\t')
+    mdf = pd.read_csv('csvs/TUI_papildoma_info.csv', encoding = 'utf-16', sep = '\t')
     comps = list(set(df['COMPANY']))
     comps.sort()
     mdf_cols = list(mdf.columns.values)
@@ -70,5 +70,5 @@ def add_metadata(filename):
     tidy_up_file(name)
 
 
-add_metadata('pngs/predict2_updated.csv')
+add_metadata('csvs/predict2_updated.csv')
 

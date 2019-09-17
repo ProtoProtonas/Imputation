@@ -36,6 +36,9 @@
     <Compile Include="PridetiMetaduomenis.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="PridetiSaliuNumerius.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="RecurrentNN.py" />
     <Compile Include="SimpleNN.py">
       <SubType>Code</SubType>

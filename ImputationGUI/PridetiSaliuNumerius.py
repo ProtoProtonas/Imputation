@@ -9,4 +9,4 @@ def prideti_saliu_numerius(filename):
     df.to_csv(filename, encoding = 'utf-16', sep = '\t', index = False)
     return 0
 
-prideti_saliu_numerius('pngs/predict2.csv')
+prideti_saliu_numerius('csvs/predict2.csv')

@@ -1,3 +1,0 @@
-Linear Regression:
-2.5 - 3.6% (not great, not terrible :)
-

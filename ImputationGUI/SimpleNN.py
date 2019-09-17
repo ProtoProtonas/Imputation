@@ -313,4 +313,4 @@ def main_fill(filename):
 
     return 0
 
-main_fill('pngs/predict2_updated.csv')
+main_fill('csvs/predict2_updated.csv')
