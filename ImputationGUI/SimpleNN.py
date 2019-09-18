@@ -17,42 +17,38 @@ print(tf.__version__)
 
 warnings.simplefilter(action = 'ignore', category = FutureWarning)
 register_matplotlib_converters()
+
+ACCURACY = 0.05
 REPLACE_NAN = -9999
+MIN_AVG_VALUE = 100
 
-# nupiešia grafiką, kruis parodo, kaip mažėja spėjimo paklaida
-def plot_history(history):
-    hist = pd.DataFrame(history.history)
-    hist['epoch'] = history.epoch
+TEST_LABEL = '2017-07-01'
+NEREIKIA_SPETI = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD']
+PAVERSTI_I_ONE_HOT = ['VLST_KODAS2']
+ATMESTI = ['VLST_NR', 'COMPANY']
 
-    # vidutinė absoliučioji paklaida
-    plt.figure()
-    plt.xlabel('Epoch')
-    plt.ylabel('Mean Abs Error')
-    plt.plot(hist['epoch'], hist['mean_absolute_error'], label = 'Train Error')
-    plt.plot(hist['epoch'], hist['val_mean_absolute_error'], label = 'Val Error')
-    plt.legend()
+def relatively_equal(val1, val2):
+    val1ten = ACCURACY * val1
+    val2ten = ACCURACY * val2
 
-    # vidutinė kvadratinė paklaida
-    plt.figure()
-    plt.xlabel('Epoch')
-    plt.ylabel('Mean Square Error')
-    plt.plot(hist['epoch'], hist['mean_squared_error'], label = 'Train Error')
-    plt.plot(hist['epoch'], hist['val_mean_squared_error'], label = 'Val Error')
-    plt.legend()
-    plt.show()
+    if val2 > (val1 - val1ten) and val2 < (val1 + val1ten):
+        return True
+    elif val1 > (val2 - val2ten) and val1 < (val2 + val2ten):
+        return True
+    return False
 
 def atmesti_mazas_tui(df):
-    min_value = 100
+    min_value = MIN_AVG_VALUE
     rows, cols = df.shape
     for n in reversed(range(rows)):
         row = df.iloc[n]
-        to_drop = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD', ]
+        to_drop = NEREIKIA_SPETI
         for a in to_drop:
-            row = row.drop(a)
+            row = row.drop(a, errors = 'ignore')
 
         score = row.sum() / row.count()
         if score < min_value:
-            df = df.drop(row.name)
+            df = df.drop(row.name, errors = 'ignore')
     return df
 
 def tidy_up_file(filename, encoding = 'utf-16'):
@@ -83,27 +79,28 @@ def tidy_up_file(filename, encoding = 'utf-16'):
 
     return 0
 
+def process_df(df):
+    # pridėti one-hot masyvą(-us) pagal pasirinktus stulpelius
+    for col in PAVERSTI_I_ONE_HOT:
+        all_values = list(set(x for x in df[col]))
+        for code in all_values:
+            df[code] = (code == df[col]) * 1.0
+    
+    # išmetami nereikalingi stulpeliai (taip part ir one-hot, kadangi jis jau panaudotas sukuriant kitus stulpelius)
+    for label_to_remove in ATMESTI + PAVERSTI_I_ONE_HOT:
+        _ = df.pop(label_to_remove)
+
+    return df
+
 def main_test(filename):
-    # pasirenkamas kažkuris vienas laiko periodas
-    label = '2017-07-01'
+    # pasirenkamas kažkuris vienas stulpelis, kuris bus spėjamas
+    label = TEST_LABEL
 
     raw_df = pd.read_csv(filename, encoding = 'utf-16', sep = '\t')
     df = raw_df.copy()
     # atsirenkamos tik tos reikšmės, kurios jau yra žinomos
     df = df[np.isfinite(df[label])]
-
-    # užpildomi tušti langeliai, kad pasileistų algoritmas (NaN reikšmių nepriima)
-    df = df.fillna(REPLACE_NAN)
-
-    countrydf = df.loc[:, ['VLST_NR', 'VLST_KODAS2']]
-    vlst = df.pop('VLST_NR')
-    _ = df.pop('VLST_KODAS2')
-    _ = df.pop('COMPANY')
-
-    # šalys, iš kurių atkeliavo TUI yra paverčiamos į one-hot masyvą ir tai yra priklijuojama prie pagrindinės lentelės (NN algoritmui taip yra lengviau interpretuoti informaciją)
-    tuples = list(set([tuple(x) for x in countrydf.values]))
-    for nr, code in tuples:
-        df[code] = (vlst == nr) * 1.0
+    df = process_df(df)
 
     # atskiriami duomenys testavimui ir apmokymams
     train_df = df.sample(frac = 0.8, random_state = 0)
@@ -152,7 +149,6 @@ def main_test(filename):
 
     # apmokymai
     history = model.fit(normed_train_data, train_labels, epochs = EPOCHS, validation_split = 0.2, verbose = 0, callbacks = [early_stop, PrintDot()])
-    plot_history(history)
 
     # į ekraną išvedami keli parametrai apie algoritmą
     hist = pd.DataFrame(history.history)
@@ -195,8 +191,8 @@ def main_test(filename):
     plt.axis('equal')
     plt.axis('square')
     _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000])
-    _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000 * (1 - ACCURACY_PERCENTAGE)], color = 'green')
-    _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000 / (1 - ACCURACY_PERCENTAGE)], color = 'green')
+    _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000 * (1 - ACCURACY)], color = 'green')
+    _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000 / (1 - ACCURACY)], color = 'green')
     plt.show()
 
 def main_fill(filename):
@@ -213,11 +209,9 @@ def main_fill(filename):
     labels = sorted(nancount.items(), key = lambda kv: kv[1])
     labels = [a[0] for a in labels]
 
-    for a in ['COMPANY', 'ROD_KOD', 'VLST_KODAS2', 'veikla', 'DARB', 'PAJAMOS_EUR', 'VLST_NR']:
-        try:
+    for a in NEREIKIA_SPETI + PAVERSTI_I_ONE_HOT + ATMESTI:
+        if a in labels:
             labels.remove(a)
-        except:
-            pass
 
     # ar reikia atmesti mažas reikšmes
     new_filename = filename
@@ -228,88 +222,81 @@ def main_fill(filename):
         raw_df.to_csv(new_filename, sep = '\t', encoding = 'utf-16', index = False)
 
     for label in labels:
-        print('\nWorking on label %s\n' % label)
+        print('\nTiriamas %s stulpelis\n' % label)
         raw_df = pd.read_csv(new_filename, encoding = 'utf-16', sep = '\t')
         df = raw_df.copy()
 
-        countrydf = df.loc[:, ['VLST_NR', 'VLST_KODAS2']]
-        vlst = df.pop('VLST_NR')
-        _ = df.pop('VLST_KODAS2')
-        _ = df.pop('COMPANY')
-
-        tuples = list(set([tuple(x) for x in countrydf.values]))
-
-        # sudaromas one-hot masyvas šalims aprašyti
-        for nr, code in tuples:
-            df[code] = (vlst == nr) * 1.0
+        df = process_df(df)
 
         # langelius su informacija atrenka apmokymui, be informacijos - užpildymui
         train_df = df[np.isfinite(df[label])]
         fill_df = df[np.isnan(df[label])]
-        train_df = train_df.fillna(REPLACE_NAN)
-        fill_df = fill_df.fillna(REPLACE_NAN)
-        print('Nežinomų reikšmių yra %i' % len(fill_df))
 
-        # statistika apie duomenis
-        train_stats = train_df.describe()
-        train_stats.pop(label)
+        if len(fill_df) > 0:
+            train_df = train_df.fillna(REPLACE_NAN)
+            fill_df = fill_df.fillna(REPLACE_NAN)
 
-        train_labels = train_df.pop(label)
+            print('Nežinomų reikšmių yra %i' % len(fill_df))
+            # statistika apie duomenis
+            train_stats = train_df.describe()
+            train_stats.pop(label)
 
-        # normalizuojami duomenys - atimamas vidurkis ir padalinama iš standartinio nuokrypio
-        normed_train_data, normed_fill_data = pd.DataFrame(), pd.DataFrame()
-        for col in train_df:
-            normed_train_data[col] = (train_df[col] - train_stats[col]['mean']) / train_stats[col]['std']
-            normed_fill_data[col] = (fill_df[col] - train_stats[col]['mean']) / train_stats[col]['std']
+            train_labels = train_df.pop(label)
 
-        # sukuriamas NN modelis
-        def build_model():
-            model = keras.Sequential([
-                layers.Dense(64, activation = tf.nn.relu, input_shape = [len(train_df.keys())]), 
-                layers.Dense(128, activation = tf.nn.relu),
-                layers.Flatten(),
-                layers.Dense(4, activation = tf.nn.relu),
-                layers.Dense(1)
-                ])
+            # normalizuojami duomenys - atimamas vidurkis ir padalinama iš standartinio nuokrypio
+            normed_train_data, normed_fill_data = pd.DataFrame(), pd.DataFrame()
+            for col in train_df:
+                normed_train_data[col] = (train_df[col] - train_stats[col]['mean']) / train_stats[col]['std']
+                normed_fill_data[col] = (fill_df[col] - train_stats[col]['mean']) / train_stats[col]['std']
 
-            optimizer = tf.keras.optimizers.RMSprop(0.001)
-            model.compile(loss = 'mean_squared_error',
-                        optimizer = optimizer,
-                        metrics = ['mean_absolute_error', 'mean_squared_error'])
-            return model
+            # sukuriamas NN modelis
+            def build_model():
+                model = keras.Sequential([
+                    layers.Dense(64, activation = tf.nn.relu, input_shape = [len(train_df.keys())]), 
+                    layers.Dense(128, activation = tf.nn.relu),
+                    layers.Flatten(),
+                    layers.Dense(4, activation = tf.nn.relu),
+                    layers.Dense(1)
+                    ])
+
+                optimizer = tf.keras.optimizers.RMSprop(0.001)
+                model.compile(loss = 'mean_squared_error',
+                            optimizer = optimizer,
+                            metrics = ['mean_absolute_error', 'mean_squared_error'])
+                return model
             
-        # rodo progresą (kelinta epocha)
-        class PrintDot(keras.callbacks.Callback):
-            def on_epoch_end(self, epoch, logs):
-                if epoch % 50 == 0: 
-                    print('Epochos nr. ', epoch)
+            # rodo progresą (kelinta epocha)
+            class PrintDot(keras.callbacks.Callback):
+                def on_epoch_end(self, epoch, logs):
+                    if epoch % 50 == 0: 
+                        print('Epochos nr. ', epoch)
 
-        model = build_model()
-        EPOCHS = 1000
+            model = build_model()
+            EPOCHS = 1000
 
-        # inicializuojamas objektas, kuris nutrauks apmokymus, kai rezultatai nustos gerėti
-        early_stop = keras.callbacks.EarlyStopping(monitor = 'val_loss', patience = 10) # patience - kiek epochų išlaukia prieš nutraukdamas, kai validation error nustoja gerėti
+            # inicializuojamas objektas, kuris nutrauks apmokymus, kai rezultatai nustos gerėti
+            early_stop = keras.callbacks.EarlyStopping(monitor = 'val_loss', patience = 10) # patience - kiek epochų išlaukia prieš nutraukdamas, kai validation error nustoja gerėti
 
-        history = model.fit(normed_train_data, train_labels, epochs = EPOCHS, validation_split = 0.2, verbose = 0, callbacks = [early_stop, PrintDot()])
-        #plot_history(history)
+            history = model.fit(normed_train_data, train_labels, epochs = EPOCHS, validation_split = 0.2, verbose = 0, callbacks = [early_stop, PrintDot()])
+            #plot_history(history)
 
-        hist = pd.DataFrame(history.history)
-        hist['epoch'] = history.epoch
-        print('Viso epochų: ', list(hist['epoch'])[-1] + 1)
+            hist = pd.DataFrame(history.history)
+            hist['epoch'] = history.epoch
+            print('Viso epochų: ', list(hist['epoch'])[-1] + 1)
 
-        max_epochs = 999
+            max_epochs = 999
 
-        # spėjimai apdorojami ir failas išsaugomas
-        if list(hist['epoch'])[-1] + 1 < max_epochs:
-            predictions = model.predict(normed_fill_data)
-            predictions = np.array(predictions).flatten()
-            fill_df[label] = predictions
-            fill_df.replace(REPLACE_NAN, value = np.nan)
+            # spėjimai apdorojami ir failas išsaugomas
+            if list(hist['epoch'])[-1] + 1 < max_epochs:
+                predictions = model.predict(normed_fill_data)
+                predictions = np.array(predictions).flatten()
+                fill_df[label] = predictions
+                fill_df.replace(REPLACE_NAN, value = np.nan)
 
-            raw_df.update(fill_df)
-            raw_df.to_csv(new_filename, sep = '\t', encoding = 'utf-16', index = False)
-            tidy_up_file(new_filename)
-            print('Failas sėkmingai papildytas')
+                raw_df.update(fill_df)
+                raw_df.to_csv(new_filename, sep = '\t', encoding = 'utf-16', index = False)
+                tidy_up_file(new_filename)
+                print('Failas sėkmingai papildytas')
 
     return 0
 

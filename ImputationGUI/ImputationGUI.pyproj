@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b25ecae1-ad7d-4ff4-8b2c-560f8c51e711</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>PridetiMetaduomenis.py</StartupFile>
+    <StartupFile>IterativeImputer.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -27,19 +27,12 @@
     <Compile Include="IterativeImputer.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LinearRegression.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="machine_learning.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PridetiMetaduomenis.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PridetiSaliuNumerius.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="RecurrentNN.py" />
     <Compile Include="SimpleNN.py">
       <SubType>Code</SubType>
     </Compile>

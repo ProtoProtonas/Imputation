@@ -26,21 +26,24 @@ from tensorflow import keras
 
 warnings.simplefilter(action = 'ignore', category = FutureWarning)
 register_matplotlib_converters()
-
 ACCURACY = 0.1
 MIN_AVG_VALUE = 1000
+REPLACE_NAN = -9999
+
+NEREIKIA_SPETI = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD', 'VLST_NR']
+ATMESTI = ['COMPANY', 'VLST_KODAS2']
+PAGAL_KA_SUGRUPUOTI_SPEJIMUS = 'ROD_KOD'
 
 def atmesti_mazas_tui(df):
     rows, cols = df.shape
     for n in reversed(range(rows)):
         row = df.iloc[n]
-        to_drop = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD', ]
-        for a in to_drop:
-            row = row.drop(a)
+        for a in NEREIKIA_SPETI:
+            row = row.drop(a, errors = 'ignore')
 
         score = row.sum() / row.count()
         if score < MIN_AVG_VALUE:
-            df = df.drop(row.name)
+            df = df.drop(row.name, errors = 'ignore')
 
     return df
 
@@ -67,7 +70,7 @@ def tidy_up_file(filename, encoding = 'utf-16'):
             if '.' in file[i][j] or ',' in file[i][j]:
                 # paverčia realiuosius skaičius į sveikuosius
                 file[i][j] = file[i][j].split('.')[0]
-            if '-999' in file[i][j]:
+            if str(REPLACE_NAN) in file[i][j]:
                 file[i][j] = ''
 
     new_file = ''
@@ -83,11 +86,11 @@ def tidy_up_file(filename, encoding = 'utf-16'):
     return 0
 
 # funkcija, skirta duomenų užpildymui atlikti
-def train_model_decision_trees_fill(filename):
+def train_model_iterative_fill(filename):
     pd.options.mode.chained_assignment = None
 
     df = pd.read_csv(filename, encoding = 'utf-16', sep = '\t')
-    rod_kods = list(set(df['ROD_KOD'].astype(int)))
+    groups = list(set(df[PAGAL_KA_SUGRUPUOTI_SPEJIMUS].astype(int)))
 
     estimators = [ExtraTreesRegressor(), BayesianRidge(), KNeighborsRegressor(), DecisionTreeRegressor(), RandomForestRegressor()] # geriausiai veikia decision trees regressor
     # pasirenkamas algoritmas
@@ -102,17 +105,17 @@ def train_model_decision_trees_fill(filename):
         new_filename = new_filename[0] + '_be_mazu_tui.' + new_filename[1]
         df.to_csv(new_filename, sep = '\t', encoding = 'utf-16', index = False)
 
-    for rod_kod in rod_kods:
+    for group in groups:
 
-        print('Pildomas %s rodiklis' % rod_kod)
+        print('Pildomas %s rodiklis' % group)
         maindf = pd.read_csv(new_filename, encoding = 'utf-16', sep = '\t')
 
-        # atsirenkamos eilutės tik su tam tikra ROD_KOD reikšme
-        df = maindf.loc[maindf['ROD_KOD'] == rod_kod]
+        # atsirenkamos eilutės tik su tam tikra PAGAL_KA_SUGRUPUOTI_SPEJIMUS reikšme
+        df = maindf.loc[maindf[PAGAL_KA_SUGRUPUOTI_SPEJIMUS] == group]
         X = shuffle(df)
 
         # numetamos reikšmės, kurių neina konvertuoti į skaičius
-        for name in ['COMPANY', 'VLST_KODAS2']:
+        for name in ATMESTI:
             X = X.drop(name, axis = 1)
 
         # atsikratome tuščių stulpelių (neįmanoma teisingai nuspėti kai nėra jokio pavyzdžio)
@@ -140,7 +143,7 @@ def train_model_decision_trees_fill(filename):
     return 0
 
 # funkcija, skirta algoritmų tikslumui ištestuoti su tam tikrais duomenimis
-def train_model_decision_trees_test(filename):
+def train_model_iterative_test(filename):
     save_plots = False
     pd.options.mode.chained_assignment = None
 
@@ -151,7 +154,7 @@ def train_model_decision_trees_test(filename):
     if True:
         raw_df = atmesti_mazas_tui(raw_df)
 
-    rod_kods = list(set(raw_df['ROD_KOD'].astype(int)))
+    groups = list(set(raw_df[PAGAL_KA_SUGRUPUOTI_SPEJIMUS].astype(int)))
 
     sum, total = 0, 0
     estimators = [ExtraTreesRegressor(), BayesianRidge(), KNeighborsRegressor(), DecisionTreeRegressor(), RandomForestRegressor()]
@@ -163,20 +166,20 @@ def train_model_decision_trees_test(filename):
 
         real, predicted = [], []
         
-        for rod_kod in rod_kods:
+        for group in groups:
             try:
                 maindf = raw_df
 
-                df = maindf.loc[maindf['ROD_KOD'] == rod_kod]
+                df = maindf.loc[maindf[PAGAL_KA_SUGRUPUOTI_SPEJIMUS] == group]
                 X = shuffle(df)
 
-                for name in ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD', 'VLST_NR']:
+                for name in NEREIKIA_SPETI:
                     X = X.drop(name, axis = 1)
 
                 split = 0.2 # kokiu santykiu padalinti duomenis treniravimui ir testavimui
                 x_test = X.iloc[:int(len(X) * split)]
                 x_test_to_plot = x_test # x_test_to_plot - testinis duomenų rinkinys, kurio reikšmės žinomos (galima vėliau palyginti su nuspėtom reikšmėm)
-                x_test = x_test.fillna(-9999)
+                x_test = x_test.fillna(REPLACE_NAN)
                 x_train = X.iloc[int(len(X) * split):]
                 # remove random cell values for testing
         
@@ -186,14 +189,14 @@ def train_model_decision_trees_test(filename):
                 # atsitiktiniai skaičiai yra ištrinami iš x_test masyvo
                 for _, s in sample.iterrows():
                     m = random.randint(0, len(s)-1)
-                    if x_test.at[s.name, cols[m]] != -9999:
+                    if x_test.at[s.name, cols[m]] != REPLACE_NAN:
                         x_test.at[s.name, cols[m]] = np.nan
                     n = random.randint(0, len(s)-1)
-                    if x_test.at[s.name, cols[m]] != -9999:
+                    if x_test.at[s.name, cols[m]] != REPLACE_NAN:
                         x_test.at[s.name, cols[m]] = np.nan
 
                 x_test_is_nan = x_test.isnull() # parodo, kuriose vietose nėra skaičių
-                x_test = x_test.replace(-9999, np.nan) # ištrina skaičius, kurių nebuvo iš pradžių
+                x_test = x_test.replace(REPLACE_NAN, np.nan) # ištrina skaičius, kurių nebuvo iš pradžių
 
                 x_train = x_train.reindex(sorted(x_train.columns.values), axis = 1)
                 x_train = np.array(x_train)
@@ -260,4 +263,4 @@ def train_model_decision_trees_test(filename):
     f.close()
     return 0
 
-train_model_decision_trees_test('csvs/predict2_updated.csv')
+train_model_iterative_test('csvs/predict2_updated_updated.csv')
