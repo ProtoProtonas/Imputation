@@ -18,15 +18,29 @@ print(tf.__version__)
 warnings.simplefilter(action = 'ignore', category = FutureWarning)
 register_matplotlib_converters()
 
-ACCURACY = 0.05
-REPLACE_NAN = -9999
-MIN_AVG_VALUE = 100
 
-TEST_LABEL = '2017-07-01'
-NEREIKIA_SPETI = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD']
-PAVERSTI_I_ONE_HOT = ['VLST_KODAS2']
-ATMESTI = ['VLST_NR', 'COMPANY']
 
+# <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+# <^>v<^>     REDAGUOTI ŠITUS     <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+# <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+
+ACCURACY = 0.05 # didžiausias nukrypimas nuo tikros reikšmės, kuris vis dar laikomas teisingu spėjimu (reikia tik testuojant)
+REPLACE_NAN = -9999 # kokia reikšme pakeičiamos tuščios reikšmės (galima daryti outlier, pvz. -9999999, kad išsiskirtų, arba vidurkį, kad neiškreiptų duomenų)
+MIN_AVG_VALUE = 100 # mažiausia vidutinė reikšmė, kurią gali turėti eilutė ir vis dar nebūti atmesta, kaip per maža
+
+TEST_LABEL = '2017-07-01' # kuris nors VIENAS stulpelis algoritmo testavimui
+NEREIKIA_SPETI = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD'] # stulpeliai, kurių nereikia spėti, tačiau jie vistiek gali turėti įtakos rezultatams, todėl yra paliekami
+PAVERSTI_I_ONE_HOT = ['VLST_KODAS2'] # logistiniai duomenys (pvz. šalis arba industrija), kuriuos reikia paversti į one-hot masyvą
+ATMESTI = ['VLST_NR', 'COMPANY'] # stulpeliai, kurie neturi jokios koreliacijos su spėjamais duomenimis ir tiesiog yra nenaudingi
+
+
+# <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+# <^>v<^>     ČIA STENGTIS NEBERADAGUOTI      <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+# <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+
+
+
+# palygina dvi reikšmes, ar jos skiriasi per mažiau, nei nurodo ACCURACY kintamasis
 def relatively_equal(val1, val2):
     val1ten = ACCURACY * val1
     val2ten = ACCURACY * val2
@@ -37,6 +51,7 @@ def relatively_equal(val1, val2):
         return True
     return False
 
+# atmeta mažas reikšmes turinčias eilutes tam, kad jos neiškreptų rezultatų
 def atmesti_mazas_tui(df):
     min_value = MIN_AVG_VALUE
     rows, cols = df.shape
@@ -92,7 +107,7 @@ def process_df(df):
 
     return df
 
-def main_test(filename):
+def nn_test(filename):
     # pasirenkamas kažkuris vienas stulpelis, kuris bus spėjamas
     label = TEST_LABEL
 
@@ -195,7 +210,7 @@ def main_test(filename):
     _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000 / (1 - ACCURACY)], color = 'green')
     plt.show()
 
-def main_fill(filename):
+def nn_fill(filename):
     raw_df = pd.read_csv(filename, encoding = 'utf-16', sep = '\t')
 
     # susirenka labelius čia
@@ -293,6 +308,8 @@ def main_fill(filename):
                 fill_df[label] = predictions
                 fill_df.replace(REPLACE_NAN, value = np.nan)
 
+                new_filename = new_filename.split('.')[0] + '_updated.' + new_filename.split('.')[1]
+
                 raw_df.update(fill_df)
                 raw_df.to_csv(new_filename, sep = '\t', encoding = 'utf-16', index = False)
                 tidy_up_file(new_filename)
@@ -300,4 +317,7 @@ def main_fill(filename):
 
     return 0
 
-main_fill('csvs/predict2_updated.csv')
+nn_test('csvs/predict2_updated.csv')
+
+# nn_test('kelias/iki/failo.csv')
+# nn_fill('kelias/iki/failo.csv')

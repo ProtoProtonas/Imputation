@@ -26,13 +26,24 @@ from tensorflow import keras
 
 warnings.simplefilter(action = 'ignore', category = FutureWarning)
 register_matplotlib_converters()
-ACCURACY = 0.1
-MIN_AVG_VALUE = 1000
-REPLACE_NAN = -9999
 
-NEREIKIA_SPETI = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD', 'VLST_NR']
-ATMESTI = ['COMPANY', 'VLST_KODAS2']
-PAGAL_KA_SUGRUPUOTI_SPEJIMUS = 'ROD_KOD'
+
+# <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+# <^>v<^>     REDAGUOTI ŠITUS     <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+# <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+
+ACCURACY = 0.05 # didžiausias nukrypimas nuo tikros reikšmės, kuris vis dar laikomas teisingu spėjimu (reikia tik testuojant)
+REPLACE_NAN = -9999 # kokia reikšme pakeičiamos tuščios reikšmės (galima daryti outlier, pvz. -9999999, kad išsiskirtų, arba vidurkį, kad neiškreiptų duomenų)
+MIN_AVG_VALUE = 100 # mažiausia vidutinė reikšmė, kurią gali turėti eilutė ir vis dar nebūti atmesta, kaip per maža
+
+NEREIKIA_SPETI = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD', 'VLST_NR'] # stulpeliai, kurių nereikia spėti, tačiau jie vistiek gali turėti įtakos rezultatams, todėl yra paliekami
+ATMESTI = ['COMPANY', 'VLST_KODAS2'] # stulpeliai, kurie neturi jokios koreliacijos su spėjamais duomenimis ir tiesiog yra nenaudingi
+PAGAL_KA_SUGRUPUOTI_SPEJIMUS = 'ROD_KOD' # sugruopuoja spėjimus pagal stulpelio reikšmę
+
+# <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+# <^>v<^>     ČIA STENGTIS NEBERADAGUOTI      <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+# <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
+
 
 def atmesti_mazas_tui(df):
     rows, cols = df.shape
@@ -135,6 +146,7 @@ def train_model_iterative_fill(filename):
             X = pd.DataFrame(data = X, index = index, columns = columns)
             maindf.update(X)
 
+            new_filename = new_filename.split('.')[0] + '_updated.' + new_filename.split('.')[1]
             # išsaugomi spėjimai
             maindf.to_csv(new_filename, sep = '\t', encoding = 'utf-16', index = False)
 
@@ -264,3 +276,5 @@ def train_model_iterative_test(filename):
     return 0
 
 train_model_iterative_test('csvs/predict2_updated_updated.csv')
+#train_model_iterative_fill()
+#train_model_iterative_test()
