@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b25ecae1-ad7d-4ff4-8b2c-560f8c51e711</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>IterativeImputer.py</StartupFile>
+    <StartupFile>SimpleNN.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

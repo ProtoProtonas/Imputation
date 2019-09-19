@@ -270,6 +270,7 @@ def train_model_iterative_test(filename):
             plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000])
             plt.plot([-1000000 * (1 - ACCURACY), 0, 1000000], [-1000000, 0, 1000000 * (1 - ACCURACY)], color = 'green')
             plt.plot([-1000000 / (1 - ACCURACY), 0, 1000000], [-1000000, 0, 1000000 / (1 - ACCURACY)], color = 'green')
+            plt.savefig('tikros_vs_nuspetos_iterative.png', dpi = 300, bbox_inches = 'tight')
             plt.show()
 
     f.close()

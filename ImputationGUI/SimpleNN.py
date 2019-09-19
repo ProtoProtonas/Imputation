@@ -24,9 +24,9 @@ register_matplotlib_converters()
 # <^>v<^>     REDAGUOTI ŠITUS     <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
 # <^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v<^>v
 
-ACCURACY = 0.05 # didžiausias nukrypimas nuo tikros reikšmės, kuris vis dar laikomas teisingu spėjimu (reikia tik testuojant)
+ACCURACY = 0.1 # didžiausias nukrypimas nuo tikros reikšmės, kuris vis dar laikomas teisingu spėjimu (reikia tik testuojant)
 REPLACE_NAN = -9999 # kokia reikšme pakeičiamos tuščios reikšmės (galima daryti outlier, pvz. -9999999, kad išsiskirtų, arba vidurkį, kad neiškreiptų duomenų)
-MIN_AVG_VALUE = 100 # mažiausia vidutinė reikšmė, kurią gali turėti eilutė ir vis dar nebūti atmesta, kaip per maža
+MIN_AVG_VALUE = 10000 # mažiausia vidutinė reikšmė, kurią gali turėti eilutė ir vis dar nebūti atmesta, kaip per maža
 
 TEST_LABEL = '2017-07-01' # kuris nors VIENAS stulpelis algoritmo testavimui
 NEREIKIA_SPETI = ['VLST_KODAS2', 'DARB', 'PAJAMOS_EUR', 'veikla', 'COMPANY', 'ROD_KOD'] # stulpeliai, kurių nereikia spėti, tačiau jie vistiek gali turėti įtakos rezultatams, todėl yra paliekami
@@ -105,6 +105,8 @@ def process_df(df):
     for label_to_remove in ATMESTI + PAVERSTI_I_ONE_HOT:
         _ = df.pop(label_to_remove)
 
+    df = df.fillna(REPLACE_NAN)
+
     return df
 
 def nn_test(filename):
@@ -137,10 +139,10 @@ def nn_test(filename):
     # NN modelis su sluoksniais ir jų dydžiais
     def build_model():
         model = keras.Sequential([
-            layers.Dense(64, activation = tf.nn.relu, input_shape = [len(train_df.keys())]), 
-            layers.Dense(128, activation = tf.nn.relu),
+            layers.Dense(64, activation = tf.nn.leaky_relu, input_shape = [len(train_df.keys())]), 
+            layers.Dense(128, activation = tf.nn.leaky_relu),
             layers.Flatten(),
-            layers.Dense(4, activation = tf.nn.relu),
+            layers.Dense(4, activation = tf.nn.leaky_relu),
             layers.Dense(1)
             ])
 
@@ -177,14 +179,12 @@ def nn_test(filename):
 
     test_predictions = model.predict(normed_test_data).flatten()
 
-    # mažiausia reikšmė, kurią nuspėjus spėjimas dar įtraukiamas į galutinį rezultatą
-    min_value = 10000
     # ištestuojamas algortimo tikslumas
     score, total = 0, 0
     for i in range(len(test_labels)):
         actual = float(test_labels.iloc[i])
         predicted = float(test_predictions[i])
-        if actual > min_value and predicted > min_value:
+        if actual > MIN_AVG_VALUE and predicted > MIN_AVG_VALUE:
             if relatively_equal(actual, predicted):
                 score += 1
             total += 1
@@ -195,7 +195,7 @@ def nn_test(filename):
     test_predictions = list(test_predictions)
     # atmetamos per mažos reikšmės
     for i in reversed(range(len(test_labels))):
-        if test_labels[i] < min_value:
+        if test_labels[i] < MIN_AVG_VALUE:
             del test_labels[i]
             del test_predictions[i]
 
@@ -205,9 +205,10 @@ def nn_test(filename):
     plt.ylabel('Nuspėtos TUI reikšmės')
     plt.axis('equal')
     plt.axis('square')
-    _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000])
-    _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000 * (1 - ACCURACY)], color = 'green')
-    _ = plt.plot([-1000000, 0, 1000000], [-1000000, 0, 1000000 / (1 - ACCURACY)], color = 'green')
+    _ = plt.plot([-10000000, 0, 10000000], [-10000000, 0, 10000000])
+    _ = plt.plot([-10000000, 0, 10000000], [-10000000, 0, 10000000 * (1 - ACCURACY)], color = 'green')
+    _ = plt.plot([-10000000, 0, 10000000], [-10000000, 0, 10000000 / (1 - ACCURACY)], color = 'green')
+    plt.savefig('tikros_vs_nuspetos_nn.png', dpi = 300, bbox_inches = 'tight')
     plt.show()
 
 def nn_fill(filename):
@@ -267,10 +268,10 @@ def nn_fill(filename):
             # sukuriamas NN modelis
             def build_model():
                 model = keras.Sequential([
-                    layers.Dense(64, activation = tf.nn.relu, input_shape = [len(train_df.keys())]), 
-                    layers.Dense(128, activation = tf.nn.relu),
+                    layers.Dense(64, activation = tf.nn.leaky_relu, input_shape = [len(train_df.keys())]), 
+                    layers.Dense(128, activation = tf.nn.leaky_relu),
                     layers.Flatten(),
-                    layers.Dense(4, activation = tf.nn.relu),
+                    layers.Dense(4, activation = tf.nn.leaky_relu),
                     layers.Dense(1)
                     ])
 
